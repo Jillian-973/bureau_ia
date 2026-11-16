@@ -34,16 +34,16 @@ export function Effects({ level }: EffectsProps) {
       <TiltShift
         focusArea={0.6}
         feather={0.5}
-        kernelSize={full ? KernelSize.MEDIUM : KernelSize.SMALL}
-        resolutionScale={full ? 0.75 : 0.5}
+        kernelSize={full ? KernelSize.SMALL : KernelSize.VERY_SMALL}
+        resolutionScale={full ? 1 : 0.5}
       />
       {/* Only light sources (emissive surfaces above the threshold) glow. */}
       <Bloom
         mipmapBlur
-        intensity={full ? 0.8 : 0.65}
+        intensity={full ? 0.4 : 0.33}
         luminanceThreshold={BLOOM_THRESHOLD}
         luminanceSmoothing={0.25}
-        radius={0.7}
+        radius={0.35}
         levels={full ? 6 : 4}
       />
       {/* The composer disables the renderer tone mapping, so it is applied here. */}
