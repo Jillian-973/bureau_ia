@@ -3,6 +3,7 @@ import {
   createElement,
   deleteElement,
   readElement,
+  restoreElement,
   updateElement,
 } from '../../src/worker/services/elements';
 import { getLastEventId, listEvents, readEvent, undoEvent } from '../../src/worker/services/events';
@@ -109,16 +110,24 @@ describe('undo', () => {
 });
 
 describe('permanent deletion', () => {
+  it('only applies to what is already in the trash', async () => {
+    const { ctx } = createTestContext();
+    const id = await newMission(ctx);
+    await expect(requestPermanentDeletion(ctx, 'mission', id)).rejects.toMatchObject({ code: 'conflit' });
+    await expect(requestPermanentDeletion(ctx, 'mission', id)).rejects.toThrow(/corbeille/);
+    expect(await countRows('jetons_confirmation', `id_cible = '${id}'`)).toBe(0);
+  });
+
   it('takes a request, then a confirmation with a single-use token', async () => {
     const { ctx, broadcasts } = createTestContext();
-    const id = await newMission(ctx);
+    const id = await trashedMission(ctx);
     broadcasts.length = 0;
 
     const { jeton, expire_le } = await requestPermanentDeletion(ctx, 'mission', id);
     expect(jeton.length).toBeGreaterThanOrEqual(32);
     expect(new Date(expire_le).getTime()).toBeGreaterThan(Date.now());
     // Nothing is deleted before the confirmation, and the token is not stored in clear.
-    expect(await readElement(ctx, 'mission', id)).toBeDefined();
+    expect(await countRows('missions', `id = '${id}'`)).toBe(1);
     expect(await countRows('jetons_confirmation', `jeton_hash = '${jeton}'`)).toBe(0);
 
     const event = await confirmPermanentDeletion(ctx, jeton);
@@ -131,7 +140,7 @@ describe('permanent deletion', () => {
   });
 
   it('refuses a wrong or expired token', async () => {
-    const id = await newMission(createTestContext().ctx);
+    const id = await trashedMission(createTestContext().ctx);
     await expect(confirmPermanentDeletion(createTestContext().ctx, 'pas-le-bon-jeton')).rejects.toMatchObject({
       code: 'jeton_invalide',
     });
@@ -144,9 +153,19 @@ describe('permanent deletion', () => {
     expect(await countRows('missions', `id = '${id}'`)).toBe(1);
   });
 
-  it('cannot be undone', async () => {
+  it('is refused when the element was restored before the confirmation', async () => {
     const { ctx } = createTestContext();
-    const id = await newMission(ctx);
+    const id = await trashedMission(ctx);
+    const { jeton } = await requestPermanentDeletion(ctx, 'mission', id);
+    await restoreElement(ctx, 'mission', id);
+
+    await expect(confirmPermanentDeletion(ctx, jeton)).rejects.toMatchObject({ code: 'conflit' });
+    expect(await readElement(ctx, 'mission', id)).toMatchObject({ titre: 'Mission de test' });
+  });
+
+  it('is the one change that cannot be undone', async () => {
+    const { ctx } = createTestContext();
+    const id = await trashedMission(ctx);
     const { jeton } = await requestPermanentDeletion(ctx, 'mission', id);
     const event = await confirmPermanentDeletion(ctx, jeton);
     await expect(undoEvent(ctx, event.id)).rejects.toMatchObject({ code: 'interdit' });
@@ -156,15 +175,19 @@ describe('permanent deletion', () => {
     const { ctx } = createTestContext();
     await expect(requestPermanentDeletion(ctx, 'agent', 'agent-chef')).rejects.toMatchObject({ code: 'interdit' });
 
+    // The meeting room still has furniture: it can go to the trash, not further.
+    await deleteElement(ctx, 'salle', 'salle-reunion');
     const { jeton } = await requestPermanentDeletion(ctx, 'salle', 'salle-reunion');
     await expect(confirmPermanentDeletion(ctx, jeton)).rejects.toMatchObject({ code: 'conflit' });
     expect(await countRows('salles', "id = 'salle-reunion'")).toBe(1);
+    await restoreElement(ctx, 'salle', 'salle-reunion');
   });
 
   it('removes the versions of a deleted agent with it', async () => {
     const { ctx } = createTestContext();
     const { element } = await createElement(ctx, 'agent', { fournisseur: 'deepseek', nom: 'Stagiaire', fonction: 'Aide' });
     const id = String(element.id);
+    await deleteElement(ctx, 'agent', id);
     const { jeton } = await requestPermanentDeletion(ctx, 'agent', id);
     await confirmPermanentDeletion(ctx, jeton);
     expect(await countRows('agents', `id = '${id}'`)).toBe(0);
@@ -215,4 +238,11 @@ describe('emptying the trash', () => {
 async function newMission(ctx: ReturnType<typeof createTestContext>['ctx']): Promise<string> {
   const { element } = await createElement(ctx, 'mission', { titre: 'Mission de test', type: 'recherche' });
   return String(element.id);
+}
+
+/** A mission already sent to the trash, ready for a permanent deletion. */
+async function trashedMission(ctx: ReturnType<typeof createTestContext>['ctx']): Promise<string> {
+  const id = await newMission(ctx);
+  await deleteElement(ctx, 'mission', id);
+  return id;
 }
