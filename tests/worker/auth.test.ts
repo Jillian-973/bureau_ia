@@ -49,6 +49,8 @@ describe('login', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
     expect(response.headers.get('cache-control')).toBe('no-store');
+    // With `no-referrer`, browsers post the form with `Origin: null` and login breaks.
+    expect(response.headers.get('referrer-policy')).toBe('same-origin');
     const html = await response.text();
     expect(html).toContain('Mot de passe');
     expect(html).toContain('type="password"');
