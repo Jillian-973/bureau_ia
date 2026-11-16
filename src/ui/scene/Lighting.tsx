@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import type { DirectionalLight } from 'three';
 import { useDaylight } from './daylight-context';
+import { useQualitySettings } from './quality-context';
 
 /** Distance of the sun/moon light from the room centre. */
 const LIGHT_DISTANCE = 30;
@@ -8,16 +9,16 @@ const LIGHT_DISTANCE = 30;
 interface LightingProps {
   /** Half-size of the area that must be covered by shadows, in world units. */
   shadowExtent: number;
-  shadowMapSize: number;
 }
 
 /** Sky ambience and the main directional light (sun by day, moon by night). */
-export function Lighting({ shadowExtent, shadowMapSize }: LightingProps) {
+export function Lighting({ shadowExtent }: LightingProps) {
   const daylight = useDaylight();
+  const { shadows, shadowMapSize } = useQualitySettings();
   const lightRef = useRef<DirectionalLight>(null);
   const [x, y, z] = daylight.lightDirection;
 
-  // The shadow camera is not reactive: refresh it when its bounds change.
+  // The shadow map is not reactive: rebuild it when its size or bounds change.
   useLayoutEffect(() => {
     const light = lightRef.current;
     if (!light) return;
@@ -39,7 +40,7 @@ export function Lighting({ shadowExtent, shadowMapSize }: LightingProps) {
         position={[x * LIGHT_DISTANCE, y * LIGHT_DISTANCE, z * LIGHT_DISTANCE]}
         color={daylight.lightColor}
         intensity={daylight.lightIntensity}
-        castShadow
+        castShadow={shadows}
         shadow-bias={-0.0004}
         shadow-normalBias={0.03}
       >

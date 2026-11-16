@@ -5,6 +5,7 @@ import { BufferAttribute, DoubleSide, PlaneGeometry, Vector3 } from 'three';
 import type { Group, Texture } from 'three';
 import { CAMERA_PITCH } from './camera-fit';
 import { PIXELS_PER_UNIT } from './placeholder-textures';
+import { useQualitySettings } from './quality-context';
 
 /**
  * Sprites stand upright while the camera looks down at them, which squashes
@@ -60,6 +61,7 @@ export function PixelSprite({
   children,
 }: PixelSpriteProps) {
   const groupRef = useRef<Group>(null);
+  const { shadows } = useQualitySettings();
   const width = pixelWidth / PIXELS_PER_UNIT;
   const height = (pixelHeight / PIXELS_PER_UNIT) * SPRITE_HEIGHT_STRETCH;
   const geometry = useMemo(() => createSpriteGeometry(width, height), [width, height]);
@@ -85,6 +87,13 @@ export function PixelSprite({
           roughness={1}
         />
       </mesh>
+      {/* Without real-time shadows, a dark spot keeps the sprite grounded. */}
+      {castShadow && !shadows && (
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[width * 0.36, 12]} />
+          <meshBasicMaterial color="#000000" transparent opacity={0.32} depthWrite={false} />
+        </mesh>
+      )}
       {children}
     </group>
   );
