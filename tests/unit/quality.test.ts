@@ -5,7 +5,7 @@ import {
   detectInitialQuality,
   lowerQuality,
   parseQualityMode,
-} from '../src/ui/scene/quality';
+} from '../../src/ui/scene/quality';
 
 describe('quality levels', () => {
   it('offers exactly three levels, each cheaper than the previous one', () => {
