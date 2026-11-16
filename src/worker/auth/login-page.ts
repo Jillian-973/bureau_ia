@@ -63,6 +63,8 @@ export function renderLoginPage({ next, error, status = 200 }: LoginPageOptions)
   ${error ? `<p class="error" role="alert">${escapeHtml(error)}</p>` : ''}
   <form method="post" action="/login">
     <input type="hidden" name="next" value="${escapeHtml(next)}">
+    <!-- There is a single user: this hidden name only helps password managers file the entry. -->
+    <input type="text" name="utilisateur" value="bureau" autocomplete="username" hidden>
     <label for="mot_de_passe">Mot de passe</label>
     <input id="mot_de_passe" name="mot_de_passe" type="password" autocomplete="current-password" required autofocus>
     <button type="submit">Entrer</button>
@@ -78,7 +80,9 @@ export function renderLoginPage({ next, error, status = 200 }: LoginPageOptions)
       'cache-control': 'no-store',
       'content-security-policy':
         "default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
-      'referrer-policy': 'no-referrer',
+      // Not `no-referrer`: browsers would then send `Origin: null` with the
+      // form, and the same-origin check would refuse every login.
+      'referrer-policy': 'same-origin',
       'x-content-type-options': 'nosniff',
     },
   });
