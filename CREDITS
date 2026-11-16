@@ -1,0 +1,45 @@
+CREDITS — Bureau d'agents IA
+============================
+
+Ce fichier liste chaque graphisme utilisé par le projet, avec son origine et
+sa licence. Il doit être mis à jour à chaque ajout ou remplacement.
+
+Aucun élément de Dragon Quest ni d'un autre jeu n'est repris : le style HD-2D
+est une inspiration, tous les graphismes ci-dessous sont originaux.
+
+
+Graphismes provisoires (Phase 0)
+--------------------------------
+
+Tous les graphismes actuels sont générés par du code écrit pour ce projet.
+Le dépôt ne contient aucun fichier image et aucun graphisme tiers.
+
+Graphisme                         Fichier source                                   Origine            Licence
+--------------------------------  -----------------------------------------------  -----------------  ---------------------
+Texture du sol (parquet)          src/ui/scene/placeholder-textures.ts             Généré par code    Propre au projet
+Texture des murs                  src/ui/scene/placeholder-textures.ts             Généré par code    Propre au projet
+Texture du tapis                  src/ui/scene/placeholder-textures.ts             Généré par code    Propre au projet
+Sprite de plante en pot           src/ui/scene/placeholder-textures.ts             Généré par code    Propre au projet
+Meubles (bureau, chaise,          src/ui/scene/PlaceholderFurniture.tsx            Volumes simples    Propre au projet
+  bibliothèque, comptoir, lampe,                                                   générés par code
+  canapé)
+Fenêtres                          src/ui/scene/Room.tsx                            Volumes simples    Propre au projet
+                                                                                   générés par code
+Planche de sprites de l'avatar    src/ui/avatars/placeholder-avatar-sprite.ts      Généré par code    Propre au projet
+
+
+Polices
+-------
+
+Aucune police n'est embarquée : l'interface utilise les polices à chasse fixe
+déjà présentes sur l'appareil.
+
+
+À faire lors du remplacement des graphismes provisoires
+-------------------------------------------------------
+
+- Ajouter une ligne par graphisme : nom, fichier, auteur, source, licence.
+- Graphismes issus du générateur LPC (Universal LPC Spritesheet Character
+  Generator) : licence GPL 3.0 et/ou CC-BY-SA 3.0, et chaque auteur doit être
+  crédité nommément.
+- Vérifier que chaque licence autorise la modification et l'usage sur le web.
