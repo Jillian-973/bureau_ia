@@ -22,6 +22,11 @@
     }
   ],
 
+  // Every day at 03:00 UTC: empty the trash of what is older than 30 days.
+  "triggers": {
+    "crons": ["0 3 * * *"]
+  },
+
   // Secrets are never written here: `.dev.vars` locally, `wrangler secret put` online.
   "secrets": {
     "required": ["BUREAU_PASSWORD", "SESSION_SECRET"]
