@@ -31,6 +31,111 @@ export function createPixelTexture(width: number, height: number, paint: Painter
   return texture;
 }
 
+/**
+ * Draws a one-pixel dark outline around everything already painted, the
+ * classic way to make a sprite readable on any background.
+ */
+export function outlineSprite(ctx: CanvasRenderingContext2D, color: [number, number, number]): void {
+  const { width, height } = ctx.canvas;
+  const image = ctx.getImageData(0, 0, width, height);
+  const source = new Uint8ClampedArray(image.data);
+  const isSolid = (x: number, y: number) =>
+    x >= 0 && x < width && y >= 0 && y < height && (source[(y * width + x) * 4 + 3] ?? 0) > 0;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (isSolid(x, y)) continue;
+      if (isSolid(x - 1, y) || isSolid(x + 1, y) || isSolid(x, y - 1) || isSolid(x, y + 1)) {
+        const offset = (y * width + x) * 4;
+        image.data[offset] = color[0];
+        image.data[offset + 1] = color[1];
+        image.data[offset + 2] = color[2];
+        image.data[offset + 3] = 255;
+      }
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+}
+
+/** Fills an ellipse pixel by pixel (no anti-aliasing, unlike canvas arcs). */
+function fillPixelEllipse(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radiusX: number,
+  radiusY: number,
+): void {
+  for (let y = Math.floor(centerY - radiusY); y <= Math.ceil(centerY + radiusY); y++) {
+    for (let x = Math.floor(centerX - radiusX); x <= Math.ceil(centerX + radiusX); x++) {
+      const dx = (x + 0.5 - centerX) / radiusX;
+      const dy = (y + 0.5 - centerY) / radiusY;
+      if (dx * dx + dy * dy <= 1) ctx.fillRect(x, y, 1, 1);
+    }
+  }
+}
+
+export const PLACEHOLDER_PLANT_SIZE = { width: 20, height: 30 };
+
+/** Potted plant sprite (small decorative objects are 2D sprites in the scene). */
+export function createPlaceholderPlantTexture(): CanvasTexture {
+  const { width, height } = PLACEHOLDER_PLANT_SIZE;
+  return createPixelTexture(width, height, (ctx) => {
+    // Leaves, from the darkest at the back to the lightest in front
+    const leaves: Array<[string, number, number, number, number]> = [
+      ['#2f6b3c', 10, 9, 6.5, 7.5],
+      ['#2f6b3c', 5.5, 13, 3.5, 5],
+      ['#2f6b3c', 14.5, 13, 3.5, 5],
+      ['#3f8a4b', 8, 8, 3.5, 5],
+      ['#3f8a4b', 13, 10, 3, 4.5],
+      ['#58a85c', 9, 6, 1.6, 2.6],
+      ['#58a85c', 13.5, 8.5, 1.3, 2],
+      ['#58a85c', 6, 12, 1.2, 2],
+    ];
+    for (const [color, x, y, radiusX, radiusY] of leaves) {
+      ctx.fillStyle = color;
+      fillPixelEllipse(ctx, x, y, radiusX, radiusY);
+    }
+    // Terracotta pot
+    ctx.fillStyle = '#b5633c';
+    ctx.fillRect(5, 19, 10, 2);
+    ctx.fillRect(6, 21, 8, 7);
+    ctx.fillRect(7, 28, 6, 1);
+    ctx.fillStyle = '#cf7d50';
+    ctx.fillRect(6, 19, 3, 1);
+    ctx.fillRect(7, 21, 1, 6);
+    ctx.fillStyle = '#8e4a2b';
+    ctx.fillRect(12, 21, 2, 7);
+    outlineSprite(ctx, [38, 26, 34]);
+  });
+}
+
+/** Rug with a border and a diamond pattern; sized in world units. */
+export function createPlaceholderRugTexture(widthInUnits: number, depthInUnits: number): CanvasTexture {
+  const width = widthInUnits * PIXELS_PER_UNIT;
+  const height = depthInUnits * PIXELS_PER_UNIT;
+  return createPixelTexture(width, height, (ctx) => {
+    ctx.fillStyle = '#7d3340';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#e6d3a8';
+    ctx.fillRect(3, 3, width - 6, height - 6);
+    ctx.fillStyle = '#8f3d4a';
+    ctx.fillRect(5, 5, width - 10, height - 10);
+    // Diamond motifs along the centre line
+    ctx.fillStyle = '#e6d3a8';
+    const centerY = height / 2;
+    for (let centerX = PIXELS_PER_UNIT / 2; centerX < width; centerX += PIXELS_PER_UNIT) {
+      for (let offset = -6; offset <= 6; offset++) {
+        const half = 6 - Math.abs(offset);
+        ctx.fillRect(centerX - half, centerY + offset, half * 2, 1);
+      }
+    }
+    ctx.fillStyle = '#7d3340';
+    for (let centerX = PIXELS_PER_UNIT / 2; centerX < width; centerX += PIXELS_PER_UNIT) {
+      ctx.fillRect(centerX - 2, centerY - 1, 4, 2);
+    }
+  });
+}
+
 const WOOD_SHADES: readonly [string, ...string[]] = ['#b98a5a', '#b28152', '#c1925f', '#ab7b4e'];
 const WOOD_SEAM = '#8a6240';
 const WOOD_GRAIN = '#a37548';
