@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SUNRISE_HOUR, SUNSET_HOUR, computeDaylight } from '../src/shared/simulation/daylight';
-import { formatHour, getParisHour } from '../src/shared/simulation/paris-time';
+import { SUNRISE_HOUR, SUNSET_HOUR, computeDaylight } from '../../src/shared/simulation/daylight';
+import { formatHour, getParisHour } from '../../src/shared/simulation/paris-time';
 
 describe('getParisHour', () => {
   it('uses winter time (UTC+1)', () => {

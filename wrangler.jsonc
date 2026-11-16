@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "bureau",
+  "main": "./src/worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "upload_source_maps": true,
+
+  // Static assets (the interface). Every request goes through the Worker
+  // first, so the page is only served to a logged-in user.
+  "assets": {
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+
+  // Data. No `database_id`: Wrangler creates the database on the first deploy.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bureau",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Real time: one "Bureau" Durable Object holds the WebSockets of every open view.
+  "durable_objects": {
+    "bindings": [{ "name": "BUREAU", "class_name": "Bureau" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Bureau"] }],
+
+  // Every day at 03:00 UTC: empty the trash of what is older than 30 days.
+  "triggers": {
+    "crons": ["0 3 * * *"]
+  },
+
+  // Secrets are never written here: `.dev.vars` locally, `wrangler secret put` online.
+  "secrets": {
+    "required": ["BUREAU_PASSWORD", "SESSION_SECRET"]
+  }
+}

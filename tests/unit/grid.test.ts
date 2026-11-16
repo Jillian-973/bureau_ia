@@ -5,7 +5,7 @@ import {
   footprintToWorld,
   isWalkable,
   worldToCell,
-} from '../src/shared/simulation/grid';
+} from '../../src/shared/simulation/grid';
 
 const size = { cols: 12, rows: 10 };
 

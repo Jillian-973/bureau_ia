@@ -1,0 +1,9 @@
+# Local secrets. Copy this file to `.dev.vars` (ignored by Git) and fill it in.
+# Online, set the same names with `npx wrangler secret put <NAME>`.
+
+# Password of the office: 12 characters at least.
+BUREAU_PASSWORD=
+
+# Key that signs the session cookie: 32 characters at least, random.
+# Generate one with: node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+SESSION_SECRET=
