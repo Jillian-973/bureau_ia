@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>Aperçu MCP App — Bureau d'agents IA</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #1b1c22;
+        color: #e9eaf0;
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      h1 {
+        margin: 0 12px 0 0;
+        font-size: 16px;
+      }
+      button {
+        padding: 6px 10px;
+        border: 1px solid #5a5d6e;
+        border-radius: 6px;
+        background: #2a2c36;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      button[aria-pressed='true'] {
+        border-color: #ffd66b;
+        color: #ffd66b;
+      }
+      p {
+        max-width: 760px;
+        color: #a8abbb;
+        line-height: 1.45;
+      }
+      #frame {
+        display: block;
+        max-width: 100%;
+        border: 1px solid #5a5d6e;
+        border-radius: 12px;
+        background: #000;
+      }
+      #frame.fullscreen {
+        position: fixed;
+        inset: 0;
+        width: 100% !important;
+        height: 100% !important;
+        border: 0;
+        border-radius: 0;
+      }
+      #exit {
+        display: none;
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 1;
+      }
+      #frame.fullscreen + #exit {
+        display: block;
+      }
+      #error {
+        color: #ff9d8a;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Aperçu MCP App</h1>
+      <button type="button" data-size="720x420" aria-pressed="true">Dans le chat (720 × 420)</button>
+      <button type="button" data-size="380x480" aria-pressed="false">Étroit (380 × 480)</button>
+      <button type="button" data-size="full" aria-pressed="false">Plein écran</button>
+    </header>
+    <p>
+      Cette page imite la façon dont l'app Claude affiche une MCP App : le bureau est chargé dans
+      un cadre isolé, à partir d'un seul fichier HTML, avec la politique de sécurité par défaut de
+      la spécification MCP Apps (aucune requête externe autorisée).
+    </p>
+    <p id="error" hidden></p>
+    <iframe id="frame" title="Bureau d'agents IA" sandbox="allow-scripts" width="720" height="420"></iframe>
+    <button type="button" id="exit">Quitter le plein écran</button>
+
+    <script>
+      // Default Content-Security-Policy of the MCP Apps specification (SEP-1865),
+      // applied when a UI resource declares no extra domain.
+      const DEFAULT_CSP = [
+        "default-src 'none'",
+        "script-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data:",
+        "media-src 'self' data:",
+        "object-src 'none'",
+        "connect-src 'none'",
+      ].join('; ');
+
+      const frame = document.getElementById('frame');
+      const error = document.getElementById('error');
+      const buttons = [...document.querySelectorAll('button[data-size]')];
+
+      function setSize(size) {
+        for (const button of buttons) {
+          button.setAttribute('aria-pressed', String(button.dataset.size === size));
+        }
+        frame.classList.toggle('fullscreen', size === 'full');
+        if (size !== 'full') {
+          const [width, height] = size.split('x');
+          frame.width = width;
+          frame.height = height;
+        }
+      }
+      for (const button of buttons) {
+        button.addEventListener('click', () => setSize(button.dataset.size));
+      }
+      document.getElementById('exit').addEventListener('click', () => setSize('720x420'));
+
+      // The single-file build is loaded as text and injected through srcdoc, with the
+      // policy added first, the way a host delivers a UI resource to its sandbox.
+      fetch('./mcp-app/index.html')
+        .then((response) => {
+          if (!response.ok) throw new Error(String(response.status));
+          return response.text();
+        })
+        .then((html) => {
+          const policy = `<meta http-equiv="Content-Security-Policy" content="${DEFAULT_CSP}">`;
+          frame.srcdoc = html.replace('<head>', `<head>${policy}`);
+        })
+        .catch(() => {
+          error.hidden = false;
+          error.textContent =
+            "Fichier introuvable : lancez d'abord « npm run build », puis « npm run preview ».";
+        });
+    </script>
+  </body>
+</html>
