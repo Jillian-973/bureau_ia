@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { DoubleSide, Vector3 } from 'three';
+import { BufferAttribute, DoubleSide, PlaneGeometry, Vector3 } from 'three';
 import type { Group, Texture } from 'three';
 import { CAMERA_PITCH } from './camera-fit';
 import { PIXELS_PER_UNIT } from './placeholder-textures';
@@ -13,7 +13,29 @@ import { PIXELS_PER_UNIT } from './placeholder-textures';
  */
 export const SPRITE_HEIGHT_STRETCH = 1 / Math.cos(CAMERA_PITCH);
 
+/** Share of the sprite colours that stays visible without any light. */
+const SPRITE_MIN_BRIGHTNESS = 0.16;
+
 const viewDirection = new Vector3();
+
+/**
+ * Flat quad whose normals fan out from left to right, as if the sprite were
+ * a rounded shape. Lights coming from the side then shade it naturally
+ * instead of leaving it black.
+ */
+function createSpriteGeometry(width: number, height: number): PlaneGeometry {
+  const geometry = new PlaneGeometry(width, height);
+  geometry.translate(0, height / 2, 0);
+  const positions = geometry.getAttribute('position');
+  const normals = new Float32Array(positions.count * 3);
+  const normal = new Vector3();
+  for (let index = 0; index < positions.count; index++) {
+    normal.set(Math.sign(positions.getX(index)) * 0.75, 0.3, 0.6).normalize();
+    normal.toArray(normals, index * 3);
+  }
+  geometry.setAttribute('normal', new BufferAttribute(normals, 3));
+  return geometry;
+}
 
 interface PixelSpriteProps {
   texture: Texture;
@@ -40,6 +62,8 @@ export function PixelSprite({
   const groupRef = useRef<Group>(null);
   const width = pixelWidth / PIXELS_PER_UNIT;
   const height = (pixelHeight / PIXELS_PER_UNIT) * SPRITE_HEIGHT_STRETCH;
+  const geometry = useMemo(() => createSpriteGeometry(width, height), [width, height]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame(({ camera }) => {
     const group = groupRef.current;
@@ -50,9 +74,16 @@ export function PixelSprite({
 
   return (
     <group ref={groupRef} position={position}>
-      <mesh position={[0, height / 2, 0]} castShadow={castShadow}>
-        <planeGeometry args={[width, height]} />
-        <meshStandardMaterial map={texture} alphaTest={0.5} side={DoubleSide} roughness={1} />
+      <mesh geometry={geometry} castShadow={castShadow}>
+        <meshStandardMaterial
+          map={texture}
+          emissiveMap={texture}
+          emissive="#ffffff"
+          emissiveIntensity={SPRITE_MIN_BRIGHTNESS}
+          alphaTest={0.5}
+          side={DoubleSide}
+          roughness={1}
+        />
       </mesh>
       {children}
     </group>

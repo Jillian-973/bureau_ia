@@ -25,6 +25,8 @@ export interface FurnitureItem {
 export interface RoomLayout {
   size: GridSize;
   wallHeight: number;
+  /** Windows of the back wall, given by the world X position of their centre. */
+  windows: number[];
   furniture: FurnitureItem[];
 }
 
@@ -48,6 +50,7 @@ const item = (
 export const PROTOTYPE_ROOM: RoomLayout = {
   size: { cols: 12, rows: 10 },
   wallHeight: 2.5,
+  windows: [-3, 1],
   furniture: [
     item('lamp-corner', 'floor-lamp', 0, 0, 1, 1),
     item('bookshelf', 'bookshelf', 4, 0, 2, 1),

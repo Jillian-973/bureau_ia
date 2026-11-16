@@ -8,6 +8,7 @@ import { DoubleSide } from 'three';
 import { CELL_SIZE, footprintToWorld } from '../../shared/simulation/grid';
 import type { GridSize } from '../../shared/simulation/grid';
 import { createSeededRandom, pickRandom } from '../../shared/simulation/random';
+import { useDaylight } from './daylight-context';
 import { PixelSprite } from './PixelSprite';
 import {
   PLACEHOLDER_PLANT_SIZE,
@@ -27,6 +28,8 @@ const FABRIC = '#3f7f8f';
 const FABRIC_LIGHT = '#5fa3b0';
 const SCREEN_GLOW = '#8fd6ff';
 const LAMP_GLOW = '#ffd9a0';
+/** Brightness of a floor lamp when fully on. */
+const LAMP_LIGHT_INTENSITY = 14;
 const BOOK_COLORS: readonly [string, ...string[]] = [
   '#b5483f',
   '#3f6fb5',
@@ -155,8 +158,16 @@ function Counter() {
 }
 
 function FloorLamp() {
+  const { lampLevel } = useDaylight();
   return (
     <group>
+      <pointLight
+        position={[0, 1.5, 0]}
+        color={LAMP_GLOW}
+        intensity={lampLevel * LAMP_LIGHT_INTENSITY}
+        distance={9}
+        decay={1.6}
+      />
       <mesh position={[0, 0.03, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[0.2, 0.22, 0.06, 8]} />
         <meshStandardMaterial color={METAL} roughness={0.7} />
@@ -170,7 +181,7 @@ function FloorLamp() {
         <meshStandardMaterial
           color="#f3e3c2"
           emissive={LAMP_GLOW}
-          emissiveIntensity={1.2}
+          emissiveIntensity={0.05 + lampLevel * 2.4}
           roughness={0.9}
           side={DoubleSide}
         />
