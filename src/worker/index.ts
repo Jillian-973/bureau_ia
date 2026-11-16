@@ -1,3 +1,4 @@
+import { handleApi } from './api/router';
 import { handleLogin, handleLogout, isSameOrigin, requireSession } from './auth/routes';
 import { json } from './http';
 import { createLiveContext, getBureau } from './realtime';
@@ -17,6 +18,8 @@ export default {
     // Everything below needs the session opened by the password.
     const refusal = await requireSession(request, env);
     if (refusal) return refusal;
+
+    if (url.pathname.startsWith('/api/')) return handleApi(request, env);
 
     if (url.pathname === '/ws') {
       if (!isSameOrigin(request)) return new Response('Origine refusée', { status: 403 });
