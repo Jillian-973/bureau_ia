@@ -124,7 +124,7 @@
 
       // The single-file build is loaded as text and injected through srcdoc, with the
       // policy added first, the way a host delivers a UI resource to its sandbox.
-      fetch('./mcp-app/index.html')
+      fetch('./mcp-app/')
         .then((response) => {
           if (!response.ok) throw new Error(String(response.status));
           return response.text();
