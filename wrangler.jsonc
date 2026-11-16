@@ -13,6 +13,15 @@
     "run_worker_first": true
   },
 
+  // Data. No `database_id`: Wrangler creates the database on the first deploy.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bureau",
+      "migrations_dir": "migrations"
+    }
+  ],
+
   // Secrets are never written here: `.dev.vars` locally, `wrangler secret put` online.
   "secrets": {
     "required": ["BUREAU_PASSWORD", "SESSION_SECRET"]
