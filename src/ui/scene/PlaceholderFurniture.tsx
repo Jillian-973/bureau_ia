@@ -29,7 +29,7 @@ const FABRIC_LIGHT = '#5fa3b0';
 const SCREEN_GLOW = '#8fd6ff';
 const LAMP_GLOW = '#ffd9a0';
 /** Brightness of a floor lamp when fully on. */
-const LAMP_LIGHT_INTENSITY = 14;
+const LAMP_LIGHT_INTENSITY = 10;
 const BOOK_COLORS: readonly [string, ...string[]] = [
   '#b5483f',
   '#3f6fb5',
@@ -78,7 +78,7 @@ function Desk() {
         position={[0, 1.14, -0.13]}
         color="#1c2a44"
         emissive={SCREEN_GLOW}
-        emissiveIntensity={1.4}
+        emissiveIntensity={2.4}
       />
       {/* Keyboard and mug */}
       <Block size={[0.42, 0.02, 0.14]} position={[0, 0.79, 0.16]} color="#d8dbe6" />
@@ -147,7 +147,7 @@ function Counter() {
         position={[-0.38, 1.28, 0.13]}
         color="#401010"
         emissive="#ff7a4a"
-        emissiveIntensity={3}
+        emissiveIntensity={5}
       />
       <Block size={[0.09, 0.1, 0.09]} position={[-0.5, 1.01, 0.14]} color="#f1ece0" />
       {/* Spare mugs */}
@@ -181,7 +181,7 @@ function FloorLamp() {
         <meshStandardMaterial
           color="#f3e3c2"
           emissive={LAMP_GLOW}
-          emissiveIntensity={0.05 + lampLevel * 2.4}
+          emissiveIntensity={0.05 + lampLevel * 3}
           roughness={0.9}
           side={DoubleSide}
         />
