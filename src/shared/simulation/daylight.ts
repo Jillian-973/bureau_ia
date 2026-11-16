@@ -79,10 +79,10 @@ const KEYFRAMES: Keyframe[] = [
   {
     hour: 13,
     lightColor: 0xfff6e6,
-    lightIntensity: 2.7,
+    lightIntensity: 2.4,
     skyColor: 0xdbeaff,
     groundColor: 0x75634f,
-    ambientIntensity: 1.05,
+    ambientIntensity: 1,
     windowColor: 0xcfeaff,
     windowGlow: 1.15,
     lampLevel: 0,
