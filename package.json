@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "deploy": "npm run build && wrangler deploy",
     "typecheck": "wrangler types && tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply bureau --local",
+    "db:migrate:remote": "wrangler d1 migrations apply bureau --remote"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
