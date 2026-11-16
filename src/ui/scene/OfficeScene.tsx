@@ -63,7 +63,7 @@ export function OfficeScene({ hour, quality, onLowPerformance }: OfficeSceneProp
   return (
     <Canvas
       className="office-scene"
-      shadows
+      shadows="percentage"
       dpr={[1, settings.maxPixelRatio]}
       camera={CAMERA_SETTINGS}
       gl={RENDERER_SETTINGS}

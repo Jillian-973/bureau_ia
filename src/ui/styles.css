@@ -58,7 +58,7 @@ body {
   top: 10px;
   left: 10px;
   max-width: calc(100% - 20px);
-  width: 250px;
+  width: 290px;
   user-select: none;
 }
 
@@ -74,6 +74,10 @@ body {
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.hud__summary > * {
+  white-space: nowrap;
 }
 
 .hud__summary strong {
