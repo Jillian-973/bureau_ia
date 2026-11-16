@@ -40,6 +40,12 @@ describe('computeCameraFit', () => {
     }
   });
 
+  it.each([16 / 9, 2, 1, 9 / 16])('centres the room vertically at aspect %f', (aspect) => {
+    const top = project([0, 2.5, -5], aspect).y;
+    const bottom = project([0, 0, 5], aspect).y;
+    expect(top + bottom).toBeCloseTo(0, 3);
+  });
+
   it('moves the camera back on narrow viewports', () => {
     expect(computeCameraFit(bounds, 9 / 16).distance).toBeGreaterThan(
       computeCameraFit(bounds, 16 / 9).distance,
