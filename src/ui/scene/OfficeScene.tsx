@@ -9,6 +9,7 @@ import type { WalkRequest } from '../avatars/Avatar';
 import { CameraRig } from './CameraRig';
 import { CAMERA_FOV } from './camera-fit';
 import { DaylightContext } from './daylight-context';
+import { Effects } from './Effects';
 import { Lighting } from './Lighting';
 import { PlaceholderFurniture } from './PlaceholderFurniture';
 import { PROTOTYPE_ROOM, getBlockingFootprints } from './prototype-room';
@@ -69,6 +70,7 @@ export function OfficeScene({ hour }: OfficeSceneProps) {
           seed={2026}
         />
       </DaylightContext.Provider>
+      <Effects level="full" />
     </Canvas>
   );
 }

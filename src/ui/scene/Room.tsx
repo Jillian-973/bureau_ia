@@ -11,6 +11,8 @@ const SLAB_THICKNESS = 0.35;
 const CUT_COLOR = '#241d33';
 
 const WINDOW_FRAME_COLOR = '#5f4330';
+/** Pushes daylight seen through the glass above the bloom threshold. */
+const WINDOW_GLOW_BOOST = 1.7;
 
 interface WindowProps {
   /** Centre of the window along the wall, and height of its sill. */
@@ -41,7 +43,7 @@ function Window({ x, sill, width, height, z }: WindowProps) {
         <meshStandardMaterial
           color={daylight.windowColor}
           emissive={daylight.windowColor}
-          emissiveIntensity={daylight.windowGlow}
+          emissiveIntensity={daylight.windowGlow * WINDOW_GLOW_BOOST}
           roughness={0.4}
         />
       </mesh>
