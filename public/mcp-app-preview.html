@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
     <title>Aperçu MCP App — Bureau d'agents IA</title>
     <style>
       body {
@@ -121,8 +122,8 @@
       }
       document.getElementById('exit').addEventListener('click', () => setSize('720x420'));
 
-      // Forward the page's query string (?heure=, ?qualite=) is not possible inside
-      // srcdoc, so the single-file build is loaded as text and injected as-is.
+      // The single-file build is loaded as text and injected through srcdoc, with the
+      // policy added first, the way a host delivers a UI resource to its sandbox.
       fetch('./mcp-app/index.html')
         .then((response) => {
           if (!response.ok) throw new Error(String(response.status));

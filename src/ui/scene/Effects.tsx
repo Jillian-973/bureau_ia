@@ -32,9 +32,9 @@ export function Effects({ level }: EffectsProps) {
     <EffectComposer multisampling={full ? 4 : 0}>
       {/* Tilt-shift comes first: it replaces pixels, so the bloom must be added after it. */}
       <TiltShift
-        focusArea={0.52}
-        feather={0.38}
-        kernelSize={full ? KernelSize.LARGE : KernelSize.SMALL}
+        focusArea={0.6}
+        feather={0.5}
+        kernelSize={full ? KernelSize.MEDIUM : KernelSize.SMALL}
         resolutionScale={full ? 0.75 : 0.5}
       />
       {/* Only light sources (emissive surfaces above the threshold) glow. */}
