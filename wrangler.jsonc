@@ -22,6 +22,12 @@
     }
   ],
 
+  // Real time: one "Bureau" Durable Object holds the WebSockets of every open view.
+  "durable_objects": {
+    "bindings": [{ "name": "BUREAU", "class_name": "Bureau" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Bureau"] }],
+
   // Every day at 03:00 UTC: empty the trash of what is older than 30 days.
   "triggers": {
     "crons": ["0 3 * * *"]
