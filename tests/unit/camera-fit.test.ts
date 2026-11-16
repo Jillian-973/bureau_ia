@@ -4,7 +4,7 @@ import {
   CAMERA_OFFSET_DIRECTION,
   CAMERA_PITCH,
   computeCameraFit,
-} from '../src/ui/scene/camera-fit';
+} from '../../src/ui/scene/camera-fit';
 
 const bounds = { width: 12, depth: 10, height: 2.5 };
 

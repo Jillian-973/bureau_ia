@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildWalkableGrid, isWalkable } from '../src/shared/simulation/grid';
-import { findPath } from '../src/ui/avatars/pathfinding';
+import { buildWalkableGrid, isWalkable } from '../../src/shared/simulation/grid';
+import { findPath } from '../../src/ui/avatars/pathfinding';
 
 const size = { cols: 6, rows: 5 };
 
