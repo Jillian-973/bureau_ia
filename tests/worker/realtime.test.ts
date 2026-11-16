@@ -4,10 +4,16 @@ import type { RealtimeMessage } from '../../src/shared/schemas/events';
 import { createLiveContext, getBureau } from '../../src/worker/realtime';
 import { createElement, updateElement } from '../../src/worker/services/elements';
 import { getLastEventId } from '../../src/worker/services/events';
+import { TEST_ORIGIN, login } from './helpers';
+
+/** One login for the whole file: views are only served to a logged-in user. */
+const sessionCookie = login('203.0.113.50');
 
 /** Opens a view: a WebSocket that records every message it receives. */
 async function openView() {
-  const response = await SELF.fetch('https://bureau.test/ws', { headers: { Upgrade: 'websocket' } });
+  const response = await SELF.fetch(`${TEST_ORIGIN}/ws`, {
+    headers: { Upgrade: 'websocket', Cookie: await sessionCookie },
+  });
   const socket = response.webSocket;
   if (!socket) throw new Error(`No WebSocket in the response (status ${response.status})`);
   const messages: RealtimeMessage[] = [];
@@ -34,8 +40,15 @@ async function openView() {
 
 describe('real-time feed', () => {
   it('refuses a plain HTTP request', async () => {
-    const response = await SELF.fetch('https://bureau.test/ws');
+    const response = await SELF.fetch(`${TEST_ORIGIN}/ws`, { headers: { Cookie: await sessionCookie } });
     expect(response.status).toBe(426);
+  });
+
+  it('refuses a WebSocket opened from another site', async () => {
+    const response = await SELF.fetch(`${TEST_ORIGIN}/ws`, {
+      headers: { Upgrade: 'websocket', Cookie: await sessionCookie, Origin: 'https://evil.example' },
+    });
+    expect(response.status).toBe(403);
   });
 
   it('greets a new view with the id of the latest event', async () => {
