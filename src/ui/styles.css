@@ -37,7 +37,8 @@ body {
   height: 100%;
 }
 
-.app__placeholder {
-  margin: 0;
-  padding: 16px;
+.office-scene {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
 }
