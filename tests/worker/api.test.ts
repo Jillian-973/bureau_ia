@@ -115,6 +115,10 @@ describe('REST API: changing', () => {
     const created = await api('POST', '/elements/mission', { titre: 'Brouillon', type: 'perso' });
     const id = String(element(created.body).id);
 
+    // Only what is in the trash can be deleted for good.
+    expect((await api('POST', `/elements/mission/${id}/purge`)).status).toBe(409);
+    await api('DELETE', `/elements/mission/${id}`);
+
     const request = await api('POST', `/elements/mission/${id}/purge`);
     const { jeton } = request.body.data as { jeton: string };
     expect(await countRows('missions', `id = '${id}'`)).toBe(1);

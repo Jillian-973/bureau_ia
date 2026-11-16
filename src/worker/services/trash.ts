@@ -1,7 +1,8 @@
 /**
- * Permanent deletion. It is the only change that cannot be undone, so it
+ * Permanent deletion. Everything else can be undone; removing an element from
+ * the trash cannot. So it only applies to what is already in the trash, and
  * takes two steps: a request that returns a single-use token, then a
- * confirmation with that token. The trash is also emptied after 30 days.
+ * confirmation with that token. The trash also empties itself after 30 days.
  */
 import type { ElementRecord, ElementType } from '../../shared/schemas/elements';
 import type { BureauEvent } from '../../shared/schemas/events';
@@ -30,6 +31,16 @@ function generateToken(): string {
     .replaceAll('=', '');
 }
 
+/** Only what is in the trash can be deleted for good. */
+function requireInTrash(definition: ElementDefinition, element: ElementRecord): void {
+  if (!element.supprime_le) {
+    throw new ServiceError(
+      'conflit',
+      `${definition.label} ${String(element.id)} n'est pas dans la corbeille. Supprime-le d'abord : la suppression définitive ne se fait que depuis la corbeille.`,
+    );
+  }
+}
+
 export interface DeletionRequest {
   jeton: string;
   expire_le: string;
@@ -45,7 +56,9 @@ export async function requestPermanentDeletion(
   if (!definition.lifecycle) {
     throw new ServiceError('interdit', `${definition.label} : ce type ne se supprime pas.`);
   }
-  applyDeleteRules(definition, await readElement(ctx, type, id, { includeDeleted: true }));
+  const element = await readElement(ctx, type, id, { includeDeleted: true });
+  applyDeleteRules(definition, element);
+  requireInTrash(definition, element);
 
   const now = ctx.now();
   const jeton = generateToken();
@@ -115,6 +128,8 @@ export async function confirmPermanentDeletion(ctx: ServiceContext, jeton: strin
   if (!element) {
     throw new ServiceError('introuvable', `${definition.label} introuvable : ${request.id_cible}`);
   }
+  // It may have been restored between the request and the confirmation.
+  requireInTrash(definition, element);
   return deleteForGood(ctx, definition, element);
 }
 

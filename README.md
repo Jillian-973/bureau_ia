@@ -122,7 +122,7 @@ Toute lecture et toute modification passent par `src/worker/services`. L'API RES
 - est diffusée en direct par le Durable Object « Bureau » ;
 - peut être annulée à partir de son événement.
 
-Une suppression envoie à la corbeille, vidée chaque nuit de ce qui a plus de 30 jours. La suppression définitive se fait en deux temps, avec un jeton à usage unique valable 10 minutes ; c'est la seule action qui ne s'annule pas.
+Une suppression envoie à la corbeille, vidée chaque nuit de ce qui a plus de 30 jours. La suppression définitive ne se fait que depuis la corbeille, en deux temps, avec un jeton à usage unique valable 10 minutes. C'est la seule action qui ne s'annule pas : tout le reste est annulable.
 
 ### API REST
 
@@ -136,7 +136,7 @@ Les réponses sont en JSON : `{ "data": … , "event": … }` en cas de succès,
 | `PATCH /api/elements/:type/:id` | Modifier par correctif partiel |
 | `DELETE /api/elements/:type/:id` | Envoyer à la corbeille |
 | `POST /api/elements/:type/:id/restore` | Sortir de la corbeille |
-| `POST /api/elements/:type/:id/purge` | Demander une suppression définitive (renvoie un jeton) |
+| `POST /api/elements/:type/:id/purge` | Demander la suppression définitive d'un élément de la corbeille (renvoie un jeton) |
 | `POST /api/purge/confirm` | Confirmer avec le jeton |
 | `GET /api/events` | Lire le journal (`apres`, `type_cible`, `id_cible`, `limite`) |
 | `POST /api/events/:id/undo` | Annuler un événement |
