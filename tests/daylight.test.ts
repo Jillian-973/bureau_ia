@@ -37,7 +37,7 @@ describe('computeDaylight', () => {
 
   it('is dark at night with the lamps on', () => {
     const night = computeDaylight(2);
-    expect(night.lightIntensity).toBeLessThan(0.5);
+    expect(night.lightIntensity).toBeLessThan(computeDaylight(13).lightIntensity / 4);
     expect(night.lampLevel).toBe(1);
   });
 

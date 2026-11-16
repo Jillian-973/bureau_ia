@@ -1,6 +1,7 @@
 import type { ThreeEvent } from '@react-three/fiber';
 import { useEffect, useMemo } from 'react';
 import { CELL_SIZE } from '../../shared/simulation/grid';
+import { useDaylight } from './daylight-context';
 import { createPlaceholderFloorTexture, createPlaceholderWallTexture } from './placeholder-textures';
 import type { RoomLayout } from './prototype-room';
 
@@ -8,6 +9,51 @@ const WALL_THICKNESS = 0.25;
 const SLAB_THICKNESS = 0.35;
 /** Colour of the cut faces of the diorama (wall tops, slab sides). */
 const CUT_COLOR = '#241d33';
+
+const WINDOW_FRAME_COLOR = '#5f4330';
+
+interface WindowProps {
+  /** Centre of the window along the wall, and height of its sill. */
+  x: number;
+  sill: number;
+  width: number;
+  height: number;
+  /** Position of the inner wall surface. */
+  z: number;
+}
+
+/** Window on the back wall. Its glass glows with the colour of the sky outside. */
+function Window({ x, sill, width, height, z }: WindowProps) {
+  const daylight = useDaylight();
+  const bar = 0.07;
+  const frame: Array<{ size: [number, number, number]; position: [number, number, number] }> = [
+    { size: [width + bar * 2, bar, 0.1], position: [0, height / 2 + bar / 2, 0] },
+    { size: [width + bar * 2, bar, 0.14], position: [0, -height / 2 - bar / 2, 0.02] },
+    { size: [bar, height, 0.1], position: [-width / 2 - bar / 2, 0, 0] },
+    { size: [bar, height, 0.1], position: [width / 2 + bar / 2, 0, 0] },
+    { size: [0.04, height, 0.06], position: [0, 0, 0] },
+    { size: [width, 0.04, 0.06], position: [0, 0, 0] },
+  ];
+  return (
+    <group position={[x, sill + height / 2, z]}>
+      <mesh position={[0, 0, 0.01]}>
+        <planeGeometry args={[width, height]} />
+        <meshStandardMaterial
+          color={daylight.windowColor}
+          emissive={daylight.windowColor}
+          emissiveIntensity={daylight.windowGlow}
+          roughness={0.4}
+        />
+      </mesh>
+      {frame.map((part, index) => (
+        <mesh key={index} position={part.position} castShadow>
+          <boxGeometry args={part.size} />
+          <meshStandardMaterial color={WINDOW_FRAME_COLOR} roughness={0.9} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 
 interface RoomProps {
   layout: RoomLayout;
@@ -70,20 +116,21 @@ export function Room({ layout, onFloorClick }: RoomProps) {
         {wallFaces(4, textures.backWall)}
       </mesh>
 
-      {/* Left wall */}
+      {layout.windows.map((windowX) => (
+        <Window key={windowX} x={windowX} sill={1.05} width={1.5} height={1.05} z={-depth / 2} />
+      ))}
+
+      {/* Side walls do not cast shadows: a low sun would otherwise darken the whole room. */}
       <mesh
         position={[-width / 2 - WALL_THICKNESS / 2, (height - SLAB_THICKNESS) / 2, 0]}
-        castShadow
         receiveShadow
       >
         <boxGeometry args={[WALL_THICKNESS, height + SLAB_THICKNESS, depth]} />
         {wallFaces(0, textures.sideWall)}
       </mesh>
 
-      {/* Right wall */}
       <mesh
         position={[width / 2 + WALL_THICKNESS / 2, (height - SLAB_THICKNESS) / 2, 0]}
-        castShadow
         receiveShadow
       >
         <boxGeometry args={[WALL_THICKNESS, height + SLAB_THICKNESS, depth]} />

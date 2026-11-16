@@ -37,10 +37,10 @@ export const SUNSET_HOUR = 21;
 
 const NIGHT = {
   lightColor: 0x8fa8ff,
-  lightIntensity: 0.4,
-  skyColor: 0x2e3a70,
-  groundColor: 0x1a1830,
-  ambientIntensity: 0.6,
+  lightIntensity: 0.5,
+  skyColor: 0x3a4a8c,
+  groundColor: 0x1e1c3a,
+  ambientIntensity: 0.8,
   windowColor: 0x141c3d,
   windowGlow: 0.15,
   lampLevel: 1,
@@ -60,7 +60,7 @@ const KEYFRAMES: Keyframe[] = [
     lightIntensity: 1.3,
     skyColor: 0xf0b8a0,
     groundColor: 0x5a4050,
-    ambientIntensity: 0.75,
+    ambientIntensity: 0.9,
     windowColor: 0xffc9a0,
     windowGlow: 0.8,
     lampLevel: 0.5,
@@ -100,11 +100,11 @@ const KEYFRAMES: Keyframe[] = [
   },
   {
     hour: 19.75,
-    lightColor: 0xff9a5c,
-    lightIntensity: 1.4,
-    skyColor: 0xf2a98c,
-    groundColor: 0x5a3f4a,
-    ambientIntensity: 0.75,
+    lightColor: 0xffb07a,
+    lightIntensity: 1.5,
+    skyColor: 0xf2b9a0,
+    groundColor: 0x5a4050,
+    ambientIntensity: 0.9,
     windowColor: 0xff9d6e,
     windowGlow: 0.9,
     lampLevel: 0.7,
@@ -146,8 +146,8 @@ function computeLightDirection(hour: number): [number, number, number] {
   const progress = (hour - SUNRISE_HOUR) / (SUNSET_HOUR - SUNRISE_HOUR);
   return normalize([
     -Math.cos(Math.PI * progress),
-    0.25 + 1.1 * Math.sin(Math.PI * progress),
-    0.55,
+    0.4 + Math.sin(Math.PI * progress),
+    0.7,
   ]);
 }
 
