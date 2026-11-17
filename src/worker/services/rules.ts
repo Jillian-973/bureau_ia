@@ -32,6 +32,37 @@ function refuseGeminiPrivate(fournisseur: unknown, acceptePrive: unknown): void 
   }
 }
 
+/**
+ * Rule 2 of section 4: a private task never goes to the free Gemini tier. It
+ * stays with the chef, or goes to an agent that accepts private tasks; a
+ * DeepSeek agent also needs the user's permission in the settings.
+ */
+async function checkPrivacy(ctx: ServiceContext, agent: ElementRecord, privee: unknown): Promise<void> {
+  if (privee !== true) return;
+  if (agent.fournisseur === 'gemini') {
+    throw new ServiceError(
+      'interdit',
+      `Tâche privée refusée pour ${String(agent.nom)} : Gemini (offre gratuite) peut utiliser les données pour s'entraîner. Garde-la au chef ou confie-la à DeepSeek si les réglages l'autorisent.`,
+    );
+  }
+  if (agent.fournisseur === 'claude') return;
+  const setting = await ctx.db
+    .prepare("SELECT valeur FROM reglages WHERE cle = 'prive_vers_deepseek'")
+    .first<{ valeur: string }>();
+  if (setting?.valeur !== 'true') {
+    throw new ServiceError(
+      'interdit',
+      "Tâche privée refusée : l'envoi de tâches privées à DeepSeek n'est pas autorisé dans les réglages (prive_vers_deepseek).",
+    );
+  }
+  if (agent.accepte_prive !== true) {
+    throw new ServiceError(
+      'interdit',
+      `Tâche privée refusée : ${String(agent.nom)} n'accepte pas les tâches privées (accepte_prive).`,
+    );
+  }
+}
+
 /** Shape and colour must exist in the catalogue, and the footprint must fit inside the room. */
 async function checkFurniture(ctx: ServiceContext, furniture: ElementRecord): Promise<ElementRecord> {
   const model = await ctx.db
@@ -99,7 +130,8 @@ export async function applyCreateRules(
       if (mission.statut !== 'ouverte') {
         throw new ServiceError('conflit', 'Cette mission est clôturée : rouvre-la pour y ajouter une tâche.');
       }
-      await requireLive(ctx, DEFINITIONS.agent, input.agent_id);
+      const agent = await requireLive(ctx, DEFINITIONS.agent, input.agent_id);
+      await checkPrivacy(ctx, agent, input.privee);
       return input;
     }
     case 'meuble':
@@ -133,7 +165,10 @@ export async function applyUpdateRules(
       }
       return patch;
     case 'tache':
-      if (patch.agent_id !== undefined) await requireLive(ctx, DEFINITIONS.agent, patch.agent_id);
+      if (patch.agent_id !== undefined || patch.privee !== undefined) {
+        const agent = await requireLive(ctx, DEFINITIONS.agent, patch.agent_id ?? before.agent_id);
+        await checkPrivacy(ctx, agent, patch.privee ?? before.privee);
+      }
       return patch;
     case 'meuble': {
       const checked = await checkFurniture(ctx, { ...before, ...patch });

@@ -3,6 +3,9 @@
   "name": "bureau",
   "main": "./src/worker/index.ts",
   "compatibility_date": "2026-11-01",
+  // Required by the OAuth provider to fetch Client ID Metadata Documents safely
+  // (Claude's published identity): outbound requests can only reach the public internet.
+  "compatibility_flags": ["global_fetch_strictly_public"],
   "upload_source_maps": true,
 
   // Static assets (the interface). Every request goes through the Worker
@@ -21,6 +24,10 @@
       "migrations_dir": "migrations"
     }
   ],
+
+  // OAuth storage required by @cloudflare/workers-oauth-provider: clients,
+  // grants and tokens (stored as hashes). No `id`: created on the first deploy.
+  "kv_namespaces": [{ "binding": "OAUTH_KV" }],
 
   // Real time: one "Bureau" Durable Object holds the WebSockets of every open view.
   "durable_objects": {

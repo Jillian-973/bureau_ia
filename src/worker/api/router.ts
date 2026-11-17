@@ -20,6 +20,7 @@ import {
 import type { ListOptions } from '../services/elements';
 import { ServiceError } from '../services/errors';
 import { listEvents, undoEvent } from '../services/events';
+import { getBudgetState, getOfficeOverview } from '../services/overview';
 import { confirmPermanentDeletion, requestPermanentDeletion } from '../services/trash';
 
 const MAX_BODY_BYTES = 64 * 1024;
@@ -77,6 +78,14 @@ async function route(request: Request, ctx: ServiceContext, segments: string[]):
 
   if (resource === 'session' && segments.length === 1) {
     return method === 'GET' ? json({ data: { connecte: true } }) : methodNotAllowed('GET');
+  }
+
+  if (resource === 'apercu' && segments.length === 1) {
+    return method === 'GET' ? json({ data: await getOfficeOverview(ctx) }) : methodNotAllowed('GET');
+  }
+
+  if (resource === 'budget' && segments.length === 1) {
+    return method === 'GET' ? json({ data: await getBudgetState(ctx) }) : methodNotAllowed('GET');
   }
 
   if (resource === 'catalogue' && segments.length === 1) {
