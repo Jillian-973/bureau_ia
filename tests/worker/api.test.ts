@@ -57,8 +57,17 @@ describe('REST API: reading', () => {
     expect((versions.body.data as ElementRecord[])[0]).toMatchObject({ version: 1, auteur: 'systeme' });
   });
 
+  it('serves the office overview and the budget, like the chef sees them', async () => {
+    const overview = (await api('GET', '/apercu')).body.data as { agents: unknown[]; salles: unknown[] };
+    expect(overview.agents).toHaveLength(5);
+    expect(overview.salles.length).toBeGreaterThanOrEqual(6);
+    const budget = (await api('GET', '/budget')).body.data as { mois: string; fournisseurs: unknown[] };
+    expect(budget.mois).toMatch(/^\d{4}-\d{2}$/);
+    expect(budget.fournisseurs).toHaveLength(2);
+  });
+
   it('never exposes a secret', async () => {
-    for (const path of ['/elements/reglage', '/elements/agent', '/events?limite=200', '/session']) {
+    for (const path of ['/elements/reglage', '/elements/agent', '/events?limite=200', '/session', '/apercu', '/budget']) {
       const text = JSON.stringify((await api('GET', path)).body);
       expect(text).not.toContain(env.BUREAU_PASSWORD);
       expect(text).not.toContain(env.SESSION_SECRET);
