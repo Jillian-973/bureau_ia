@@ -7,16 +7,7 @@ import { AuthorizationError, CimdFetchError } from '@cloudflare/workers-oauth-pr
 import type { OAuthHelpers } from '@cloudflare/workers-oauth-provider';
 import { isSameOrigin } from '../auth/routes';
 import { renderAuthorizeError, renderConsentPage } from './consent-page';
-
-/** There is a single user. The id must not contain ":" (used inside tokens). */
-export const OWNER_USER_ID = 'proprietaire';
-
-/** Helpers that `OAuthProvider` adds to the environment of its default handler. */
-function oauthHelpers(env: Env): OAuthHelpers {
-  const helpers = (env as Env & { OAUTH_PROVIDER?: OAuthHelpers }).OAUTH_PROVIDER;
-  if (!helpers) throw new Error('OAUTH_PROVIDER is missing: /authorize must be served through OAuthProvider');
-  return helpers;
-}
+import { OWNER_USER_ID, oauthHelpers } from './helpers';
 
 async function showConsent(request: Request, oauth: OAuthHelpers): Promise<Response> {
   const authRequest = await oauth.parseAuthRequest(request);
