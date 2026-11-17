@@ -96,6 +96,12 @@ export function handleLogout(request: Request): Response {
   return redirect('/login', { 'set-cookie': buildLogoutCookie(request) });
 }
 
+/** True when the visitor has a valid session opened by the password. */
+export async function isLoggedIn(request: Request, env: Env): Promise<boolean> {
+  const secrets = readSecrets(env);
+  return secrets !== null && hasValidSession(request, secrets.sessionSecret);
+}
+
 /**
  * Guard for every protected route. Returns null when the visitor is logged
  * in, otherwise the response to send: a redirect to the login page for a

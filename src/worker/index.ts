@@ -1,32 +1,29 @@
-import { handleApi } from './api/router';
-import { handleLogin, handleLogout, isSameOrigin, requireSession } from './auth/routes';
-import { json } from './http';
-import { createLiveContext, getBureau } from './realtime';
+/**
+ * Entry point of the single Worker.
+ *
+ * - `/mcp`: the chef's MCP server, protected by OAuth
+ * - `/.well-known/…`, `/oauth/token`: OAuth protocol routes (the provider's)
+ * - everything else: see `app.ts` (login, `/authorize`, API, WebSocket, interface)
+ */
+import { app } from './app';
+import { jsonError } from './http';
+import { MCP_PATH, getProvider } from './oauth/provider';
+import { createLiveContext } from './realtime';
 import { emptyTrash } from './services/trash';
 
 export { Bureau } from './do/bureau';
 
 export default {
-  async fetch(request, env): Promise<Response> {
+  async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
+    const provider = getProvider(url.origin);
+    if (provider) return provider.fetch(request, env, ctx);
 
-    // Public routes
-    if (url.pathname === '/api/health') return json({ ok: true });
-    if (url.pathname === '/login') return handleLogin(request, env);
-    if (url.pathname === '/logout') return handleLogout(request);
-
-    // Everything below needs the session opened by the password.
-    const refusal = await requireSession(request, env);
-    if (refusal) return refusal;
-
-    if (url.pathname.startsWith('/api/')) return handleApi(request, env);
-
-    if (url.pathname === '/ws') {
-      if (!isSameOrigin(request)) return new Response('Origine refusée', { status: 403 });
-      return getBureau(env).fetch(request);
+    // Without OAuth (plain http on a non-local address), the MCP server stays closed.
+    if (url.pathname === MCP_PATH || url.pathname.startsWith(`${MCP_PATH}/`)) {
+      return jsonError(503, 'oauth_indisponible', 'Le serveur MCP exige une adresse HTTPS.');
     }
-
-    return env.ASSETS.fetch(request);
+    return app.fetch(request, env);
   },
 
   /** Daily housekeeping: empties the trash of what was deleted more than 30 days ago. */
