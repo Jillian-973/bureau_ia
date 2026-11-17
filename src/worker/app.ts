@@ -6,6 +6,7 @@ import { handleApi } from './api/router';
 import { handleLogin, handleLogout, isSameOrigin, requireSession } from './auth/routes';
 import { json } from './http';
 import { handleAuthorize } from './oauth/authorize';
+import { handleConnections } from './oauth/connections-page';
 import { getBureau } from './realtime';
 
 export const app = {
@@ -22,6 +23,7 @@ export const app = {
     if (refusal) return refusal;
 
     if (url.pathname === '/authorize') return handleAuthorize(request, env);
+    if (url.pathname === '/connexions') return handleConnections(request, env);
     if (url.pathname.startsWith('/api/')) return handleApi(request, env);
 
     if (url.pathname === '/ws') {

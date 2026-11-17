@@ -4,6 +4,8 @@
  * with the same result. Changes made here are authored by the user.
  */
 import { isSameOrigin } from '../auth/routes';
+import { createOAuthClient, deleteOAuthClient, listGrants, listOAuthClients, revokeGrant } from '../oauth/connections';
+import { oauthHelpers } from '../oauth/helpers';
 import { json, jsonError } from '../http';
 import { createLiveContext } from '../realtime';
 import { listAgentVersions, listCatalogue } from '../services/catalogue';
@@ -71,10 +73,36 @@ function readListOptions(type: string, params: URLSearchParams): ListOptions {
   };
 }
 
-async function route(request: Request, ctx: ServiceContext, segments: string[]): Promise<Response> {
+async function route(request: Request, ctx: ServiceContext, segments: string[], env: Env): Promise<Response> {
   const { method } = request;
   const params = new URL(request.url).searchParams;
   const [resource, first, second, third] = segments;
+
+  // Who may connect to the MCP server (see oauth/connections.ts).
+  if (resource === 'clients-oauth') {
+    const oauth = oauthHelpers(env);
+    if (segments.length === 1) {
+      if (method === 'GET') return json({ data: await listOAuthClients(oauth) });
+      if (method === 'POST') return json({ data: await createOAuthClient(oauth, await readJsonBody(request)) }, { status: 201 });
+      return methodNotAllowed('GET', 'POST');
+    }
+    if (first && segments.length === 2) {
+      if (method !== 'DELETE') return methodNotAllowed('DELETE');
+      await deleteOAuthClient(oauth, first);
+      return json({ data: { supprime: first } });
+    }
+    return notFound();
+  }
+  if (resource === 'acces') {
+    const oauth = oauthHelpers(env);
+    if (segments.length === 1) return method === 'GET' ? json({ data: await listGrants(oauth) }) : methodNotAllowed('GET');
+    if (first && segments.length === 2) {
+      if (method !== 'DELETE') return methodNotAllowed('DELETE');
+      await revokeGrant(oauth, first);
+      return json({ data: { revoque: first } });
+    }
+    return notFound();
+  }
 
   if (resource === 'session' && segments.length === 1) {
     return method === 'GET' ? json({ data: { connecte: true } }) : methodNotAllowed('GET');
@@ -180,7 +208,7 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
       .filter(Boolean)
       .slice(1)
       .map((segment) => decodeURIComponent(segment));
-    return await route(request, createLiveContext(env, { auteur: 'utilisateur' }), segments);
+    return await route(request, createLiveContext(env, { auteur: 'utilisateur' }), segments, env);
   } catch (error) {
     if (error instanceof ServiceError) return jsonError(error.status, error.code, error.message);
     if (error instanceof URIError) return jsonError(400, 'validation', 'Adresse invalide.');
