@@ -160,6 +160,32 @@ describe('creating elements', () => {
     ).rejects.toMatchObject({ code: 'conflit' });
   });
 
+  it('never gives a private task to the free Gemini tier (rule 2 of section 4)', async () => {
+    const { ctx } = createTestContext();
+    const { element: mission } = await createElement(ctx, 'mission', { titre: 'Dossier médical', type: 'perso' });
+    const task = (agent_id: string, privee = true) => ({ mission_id: mission.id, agent_id, brief: 'Résumer', privee });
+
+    for (const geminiAgent of ['agent-redacteur', 'agent-chercheur']) {
+      await expect(createElement(ctx, 'tache', task(geminiAgent))).rejects.toMatchObject({ code: 'interdit' });
+    }
+    // DeepSeek needs both the setting and the agent's consent.
+    await expect(createElement(ctx, 'tache', task('agent-technicien'))).rejects.toThrow(/prive_vers_deepseek/);
+    await updateElement(ctx, 'reglage', 'prive_vers_deepseek', { valeur: true });
+    await expect(createElement(ctx, 'tache', task('agent-technicien'))).rejects.toThrow(/accepte_prive/);
+    await updateElement(ctx, 'agent', 'agent-technicien', { accepte_prive: true });
+    await expect(createElement(ctx, 'tache', task('agent-technicien'))).resolves.toBeDefined();
+    // The chef always can; a non-private task goes anywhere.
+    await expect(createElement(ctx, 'tache', task('agent-chef'))).resolves.toBeDefined();
+    const { element: open } = await createElement(ctx, 'tache', task('agent-redacteur', false));
+
+    // Making it private afterwards, or moving a private task to Gemini, is refused too.
+    await expect(updateElement(ctx, 'tache', String(open.id), { privee: true })).rejects.toMatchObject({ code: 'interdit' });
+    const { element: secret } = await createElement(ctx, 'tache', task('agent-chef'));
+    await expect(updateElement(ctx, 'tache', String(secret.id), { agent_id: 'agent-chercheur' })).rejects.toMatchObject({
+      code: 'interdit',
+    });
+  });
+
   it('cannot create a setting', async () => {
     const { ctx } = createTestContext();
     await expect(createElement(ctx, 'reglage', { valeur: 1 })).rejects.toMatchObject({ code: 'interdit' });
